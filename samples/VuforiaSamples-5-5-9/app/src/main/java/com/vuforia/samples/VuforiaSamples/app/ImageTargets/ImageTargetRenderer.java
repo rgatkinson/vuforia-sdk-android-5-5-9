@@ -22,6 +22,7 @@ import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
 import android.util.Log;
 
+import com.vuforia.Matrix34F;
 import com.vuforia.Matrix44F;
 import com.vuforia.Renderer;
 import com.vuforia.State;
@@ -162,13 +163,14 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
         {
         if (!this.displayEnabled)
             {
+            GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
+
             State state = mRenderer.begin();
 
             for (int tIdx = 0; tIdx < state.getNumTrackableResults(); tIdx++)
                 {
                 TrackableResult trackableResult = state.getTrackableResult(tIdx);
-                Trackable trackable = trackableResult.getTrackable();
-                printUserData(trackable);
+                printUserData(trackableResult);
                 }
 
             mRenderer.end();
@@ -200,25 +202,26 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
                 {
                 TrackableResult trackableResult = state.getTrackableResult(tIdx);
                 Trackable trackable = trackableResult.getTrackable();
-                printUserData(trackable);
+                printUserData(trackableResult);
+
                 Matrix44F modelViewMatrix_Vuforia = Tool.convertPose2GLMatrix(trackableResult.getPose());
-                float[] modelViewMatrix = modelViewMatrix_Vuforia.getData();
+                float[] modelViewMatrixData = modelViewMatrix_Vuforia.getData();
 
                 // deal with the modelview and projection matrices
-                float[] modelViewProjection = new float[16];
+                float[] modelViewProjectionData = new float[16];
 
                 if (!mActivity.isExtendedTrackingActive())
                     {
-                    Matrix.translateM(modelViewMatrix, 0, 0.0f, 0.0f, OBJECT_SCALE_FLOAT);
-                    Matrix.scaleM(modelViewMatrix, 0, OBJECT_SCALE_FLOAT, OBJECT_SCALE_FLOAT, OBJECT_SCALE_FLOAT);
+                    Matrix.translateM(modelViewMatrixData, 0, 0.0f, 0.0f, OBJECT_SCALE_FLOAT);
+                    Matrix.scaleM(modelViewMatrixData, 0, OBJECT_SCALE_FLOAT, OBJECT_SCALE_FLOAT, OBJECT_SCALE_FLOAT);
                     }
                 else
                     {
-                    Matrix.rotateM(modelViewMatrix, 0, 90.0f, 1.0f, 0, 0);
-                    Matrix.scaleM(modelViewMatrix, 0, kBuildingScale, kBuildingScale, kBuildingScale);
+                    Matrix.rotateM(modelViewMatrixData, 0, 90.0f, 1.0f, 0, 0);
+                    Matrix.scaleM(modelViewMatrixData, 0, kBuildingScale, kBuildingScale, kBuildingScale);
                     }
 
-                Matrix.multiplyMM(modelViewProjection, 0, vuforiaAppSession.getProjectionMatrix().getData(), 0, modelViewMatrix, 0);
+                Matrix.multiplyMM(modelViewProjectionData, 0, vuforiaAppSession.getProjectionMatrix().getData(), 0, modelViewMatrixData, 0);
 
                 // activate the shader program and bind the vertex/normal/tex coords
                 GLES20.glUseProgram(shaderProgramID);
@@ -227,8 +230,8 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
                     {
                     int textureIndex = textureNames.indexOf(trackable.getName().toLowerCase());
 
-                    GLES20.glVertexAttribPointer(vertexHandle, 3, GLES20.GL_FLOAT, false, 0, mTeapot.getVertices());
-                    GLES20.glVertexAttribPointer(normalHandle, 3, GLES20.GL_FLOAT, false, 0, mTeapot.getNormals());
+                    GLES20.glVertexAttribPointer(vertexHandle,       3, GLES20.GL_FLOAT, false, 0, mTeapot.getVertices());
+                    GLES20.glVertexAttribPointer(normalHandle,       3, GLES20.GL_FLOAT, false, 0, mTeapot.getNormals());
                     GLES20.glVertexAttribPointer(textureCoordHandle, 2, GLES20.GL_FLOAT, false, 0, mTeapot.getTexCoords());
 
                     GLES20.glEnableVertexAttribArray(vertexHandle);
@@ -240,7 +243,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
                     GLES20.glUniform1i(texSampler2DHandle, 0);
 
                     // pass the model view matrix to the shader
-                    GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false, modelViewProjection, 0);
+                    GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false, modelViewProjectionData, 0);
 
                     // finally draw the teapot
                     GLES20.glDrawElements(GLES20.GL_TRIANGLES, mTeapot.getNumObjectIndex(), GLES20.GL_UNSIGNED_SHORT, mTeapot.getIndices());
@@ -265,7 +268,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
 
                     GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
                     GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextures.get(textureIndex).mTextureID[0]);
-                    GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false, modelViewProjection, 0);
+                    GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false, modelViewProjectionData, 0);
                     GLES20.glUniform1i(texSampler2DHandle, 0);
                     GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, mBuildingsModel.getNumObjectVertex());
 
@@ -281,9 +284,24 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
             }
         }
 
-    private void printUserData(Trackable trackable)
+    private void printUserData(TrackableResult trackableResult)
         {
-        String userData = (String) trackable.getUserData();
+        // http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/
+        // https://developer.vuforia.com/library/articles/Solution/Get-the-Camera-Position
+
+        // http://stackoverflow.com/questions/15022630/how-to-calculate-the-angle-from-roational-matrix
+        // http://math.stackexchange.com/questions/82602/how-to-find-camera-position-and-rotation-from-a-4x4-matrix
+
+        // "The top 3x3 block is the rotation, and the right column is the translation"
+        Matrix34F pose = trackableResult.getPose();
+
+        // modelViewMatrixData is manipulable with android.opengl.Matrix
+        Matrix44F modelViewMatrix_Vuforia = Tool.convertPose2GLMatrix(pose);
+        float[] modelViewMatrixData = modelViewMatrix_Vuforia.getData();
+
+
+        Trackable trackable = trackableResult.getTrackable();
+        String userData = (String)trackable.getUserData();
         Log.d(LOGTAG, "UserData:Retreived User Data	\"" + userData + "\"");
         }
 

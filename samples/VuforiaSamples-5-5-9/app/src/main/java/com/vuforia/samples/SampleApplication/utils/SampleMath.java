@@ -18,10 +18,8 @@ import com.vuforia.Vec3F;
 import com.vuforia.Vec4F;
 import com.vuforia.VideoBackgroundConfig;
 
-
 public class SampleMath
     {
-
     private static final String LOGTAG = "SampleMath";
 
     private static float temp[] = new float[16];
@@ -37,14 +35,12 @@ public class SampleMath
         return new Vec2F(temp[0], temp[1]);
         }
 
-
     public static float Vec2FDist(Vec2F v1, Vec2F v2)
         {
         float dx = v1.getData()[0] - v2.getData()[0];
         float dy = v1.getData()[1] - v2.getData()[1];
         return (float) Math.sqrt(dx * dx + dy * dy);
         }
-
 
     public static Vec3F Vec3FAdd(Vec3F v1, Vec3F v2)
         {
@@ -54,7 +50,6 @@ public class SampleMath
         return new Vec3F(temp[0], temp[1], temp[2]);
         }
 
-
     public static Vec3F Vec3FSub(Vec3F v1, Vec3F v2)
         {
         temp[0] = v1.getData()[0] - v2.getData()[0];
@@ -62,7 +57,6 @@ public class SampleMath
         temp[2] = v1.getData()[2] - v2.getData()[2];
         return new Vec3F(temp[0], temp[1], temp[2]);
         }
-
 
     public static Vec3F Vec3FScale(Vec3F v, float s)
         {
@@ -72,31 +66,22 @@ public class SampleMath
         return new Vec3F(temp[0], temp[1], temp[2]);
         }
 
-
     public static float Vec3FDot(Vec3F v1, Vec3F v2)
         {
-        return v1.getData()[0] * v2.getData()[0] + v1.getData()[1]
-                * v2.getData()[1] + v1.getData()[2] * v2.getData()[2];
+        return v1.getData()[0] * v2.getData()[0] + v1.getData()[1] * v2.getData()[1] + v1.getData()[2] * v2.getData()[2];
         }
-
 
     public static Vec3F Vec3FCross(Vec3F v1, Vec3F v2)
         {
-        temp[0] = v1.getData()[1] * v2.getData()[2] - v1.getData()[2]
-                * v2.getData()[1];
-        temp[1] = v1.getData()[2] * v2.getData()[0] - v1.getData()[0]
-                * v2.getData()[2];
-        temp[2] = v1.getData()[0] * v2.getData()[1] - v1.getData()[1]
-                * v2.getData()[0];
+        temp[0] = v1.getData()[1] * v2.getData()[2] - v1.getData()[2] * v2.getData()[1];
+        temp[1] = v1.getData()[2] * v2.getData()[0] - v1.getData()[0] * v2.getData()[2];
+        temp[2] = v1.getData()[0] * v2.getData()[1] - v1.getData()[1] * v2.getData()[0];
         return new Vec3F(temp[0], temp[1], temp[2]);
         }
 
-
     public static Vec3F Vec3FNormalize(Vec3F v)
         {
-        float length = (float) Math
-                .sqrt(v.getData()[0] * v.getData()[0] + v.getData()[1]
-                        * v.getData()[1] + v.getData()[2] * v.getData()[2]);
+        float length = (float) Math.sqrt(v.getData()[0] * v.getData()[0] + v.getData()[1] * v.getData()[1] + v.getData()[2] * v.getData()[2]);
         if (length != 0.0f)
             length = 1.0f / length;
 
@@ -172,7 +157,6 @@ public class SampleMath
         return new Vec4F(temp[0], temp[1], temp[2], temp[3]);
         }
 
-
     public static Matrix44F Matrix44FIdentity()
         {
         Matrix44F r = new Matrix44F();
@@ -190,7 +174,6 @@ public class SampleMath
         return r;
         }
 
-
     public static Matrix44F Matrix44FTranspose(Matrix44F m)
         {
         Matrix44F r = new Matrix44F();
@@ -201,7 +184,6 @@ public class SampleMath
         r.setData(temp);
         return r;
         }
-
 
     public static float Matrix44FDeterminate(Matrix44F m)
         {
@@ -238,7 +220,6 @@ public class SampleMath
                 * m.getData()[10] * m.getData()[15] + m.getData()[0]
                 * m.getData()[5] * m.getData()[10] * m.getData()[15];
         }
-
 
     public static Matrix44F Matrix44FInverse(Matrix44F m)
         {
@@ -419,8 +400,7 @@ public class SampleMath
         // Eye Coordinates to Object Coordinates
         Matrix44F inverseModelViewMatrix = Matrix44FInverse(modelViewMatrix);
 
-        Vec4F nearWorld = Vec4FTransform(pointOnNearPlane,
-                inverseModelViewMatrix);
+        Vec4F nearWorld = Vec4FTransform(pointOnNearPlane, inverseModelViewMatrix);
         Vec4F farWorld = Vec4FTransform(pointOnFarPlane, inverseModelViewMatrix);
 
         mLineStart = new Vec3F(nearWorld.getData()[0], nearWorld.getData()[1], nearWorld.getData()[2]);
@@ -437,8 +417,7 @@ public class SampleMath
             float screenWidth, float screenHeight, Vec2F point, Vec3F planeCenter,
             Vec3F planeNormal)
         {
-        projectScreenPointToPlane(inverseProjMatrix, modelViewMatrix,
-                screenWidth, screenHeight, point, planeCenter, planeNormal);
+        projectScreenPointToPlane(inverseProjMatrix, modelViewMatrix, screenWidth, screenHeight, point, planeCenter, planeNormal);
         return mIntersection;
         }
 
@@ -447,8 +426,7 @@ public class SampleMath
                                                  Matrix44F modelViewMatrix, float screenWidth, float screenHeight,
                                                  Vec2F point, Vec3F planeCenter, Vec3F planeNormal)
         {
-        projectScreenPointToPlane(inverseProjMatrix, modelViewMatrix,
-                screenWidth, screenHeight, point, planeCenter, planeNormal);
+        projectScreenPointToPlane(inverseProjMatrix, modelViewMatrix, screenWidth, screenHeight, point, planeCenter, planeNormal);
         return mLineStart;
         }
 
@@ -457,8 +435,7 @@ public class SampleMath
                                                Matrix44F modelViewMatrix, float screenWidth, float screenHeight,
                                                Vec2F point, Vec3F planeCenter, Vec3F planeNormal)
         {
-        projectScreenPointToPlane(inverseProjMatrix, modelViewMatrix,
-                screenWidth, screenHeight, point, planeCenter, planeNormal);
+        projectScreenPointToPlane(inverseProjMatrix, modelViewMatrix, screenWidth, screenHeight, point, planeCenter, planeNormal);
         return mLineEnd;
         }
     }
