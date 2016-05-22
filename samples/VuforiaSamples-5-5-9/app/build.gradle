@@ -5,7 +5,7 @@ def NATIVE_LIB_DIR = 'build/lib'
 def JAR_DIR = 'build/java/vuforia'
 
 android {
-    compileSdkVersion 22
+    compileSdkVersion 19
     buildToolsVersion "22.0.1"
 
     sourceSets.main {
@@ -15,14 +15,14 @@ android {
 
     defaultConfig {
         applicationId "com.vuforia.samples.VuforiaSamples"
-        minSdkVersion 8
-        targetSdkVersion 22
+        minSdkVersion 19
+        targetSdkVersion 19
         versionCode 200
         versionName "5.0"
     }
 
     archivesBaseName = rootProject.projectDir.getName()
-	
+
     buildTypes {
         release {
             minifyEnabled false
