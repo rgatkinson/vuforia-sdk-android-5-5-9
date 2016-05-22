@@ -84,6 +84,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
     private boolean                     mFlash              = false;
     private boolean                     mContAutofocus      = false;
     private boolean                     mExtendedTracking   = false;
+    private boolean                     mDisplayEnabled     = true;
     private View                        mFlashOptionView;
     private RelativeLayout              mUILayout;
     private SampleAppMenu               mSampleAppMenu;
@@ -563,7 +564,8 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
     final public static int CMD_FLASH = 3;
     final public static int CMD_CAMERA_FRONT = 4;
     final public static int CMD_CAMERA_REAR = 5;
-    final public static int CMD_DATASET_START_INDEX = 6;
+    final public static int CMD_ENABLE_DISPLAY = 6;
+    final public static int CMD_DATASET_START_INDEX = 7;
 
 
     // This method sets the menu's settings
@@ -575,8 +577,9 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
         group.addTextItem(getString(R.string.menu_back), -1);
 
         group = mSampleAppMenu.addGroup("", true);
-        group.addSelectionItem(getString(R.string.menu_extended_tracking), CMD_EXTENDED_TRACKING, false);
-        group.addSelectionItem(getString(R.string.menu_contAutofocus), CMD_AUTOFOCUS, mContAutofocus);
+        group.addSelectionItem(getString(R.string.menu_extended_tracking),  CMD_EXTENDED_TRACKING,  false);
+        group.addSelectionItem(getString(R.string.menu_contAutofocus),      CMD_AUTOFOCUS,          mContAutofocus);
+        group.addSelectionItem(getString(R.string.menu_enable_display),     CMD_ENABLE_DISPLAY,     mDisplayEnabled);
         mFlashOptionView = group.addSelectionItem(getString(R.string.menu_flash), CMD_FLASH, false);
 
         CameraInfo ci = new CameraInfo();
@@ -667,6 +670,26 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
 
                 break;
 
+            case CMD_ENABLE_DISPLAY:
+                {
+                if (mDisplayEnabled)
+                    {
+                    if (mRenderer.setDisplayEnabled(false))
+                        {
+                        mDisplayEnabled = false;
+                        }
+                    }
+                else
+                    {
+                    if (mRenderer.setDisplayEnabled(true))
+                        {
+                        mDisplayEnabled = true;
+                        }
+                    }
+                }
+                break;
+
+
             case CMD_CAMERA_FRONT:
             case CMD_CAMERA_REAR:
 
@@ -748,7 +771,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
 
         return result;
         }
-
 
     private void showToast(String text)
         {

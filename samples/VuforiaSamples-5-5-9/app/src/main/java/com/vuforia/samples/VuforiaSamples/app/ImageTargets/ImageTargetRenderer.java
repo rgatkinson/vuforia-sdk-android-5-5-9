@@ -63,6 +63,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
     private SampleApplication3DModel    mBuildingsModel;
     private Renderer                    mRenderer;
     boolean                             mIsActive = false;
+    boolean                             displayEnabled = true;
 
     private static final float OBJECT_SCALE_FLOAT = 3.0f;
 
@@ -159,109 +160,125 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
     // The render function.
     private void renderFrame()
         {
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
-
-        State state = mRenderer.begin();
-        mRenderer.drawVideoBackground();
-
-        GLES20.glEnable(GLES20.GL_DEPTH_TEST);
-
-        // Set the viewport
-        int[] viewport = vuforiaAppSession.getViewport();
-        GLES20.glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-
-        // handle face culling, we need to detect if we are using reflection
-        // to determine the direction of the culling
-        GLES20.glEnable(GLES20.GL_CULL_FACE);
-        GLES20.glCullFace(GLES20.GL_BACK);
-        if (Renderer.getInstance().getVideoBackgroundConfig().getReflection() == VIDEO_BACKGROUND_REFLECTION.VIDEO_BACKGROUND_REFLECTION_ON)
-            GLES20.glFrontFace(GLES20.GL_CW); // Front camera
-        else
-            GLES20.glFrontFace(GLES20.GL_CCW); // Back camera
-
-        // did we find any trackables this frame?
-        for (int tIdx = 0; tIdx < state.getNumTrackableResults(); tIdx++)
+        if (!this.displayEnabled)
             {
-            TrackableResult result = state.getTrackableResult(tIdx);
-            Trackable trackable = result.getTrackable();
-            printUserData(trackable);
-            Matrix44F modelViewMatrix_Vuforia = Tool.convertPose2GLMatrix(result.getPose());
-            float[] modelViewMatrix = modelViewMatrix_Vuforia.getData();
+            State state = mRenderer.begin();
 
-            // deal with the modelview and projection matrices
-            float[] modelViewProjection = new float[16];
-
-            if (!mActivity.isExtendedTrackingActive())
+            for (int tIdx = 0; tIdx < state.getNumTrackableResults(); tIdx++)
                 {
-                Matrix.translateM(modelViewMatrix, 0, 0.0f, 0.0f, OBJECT_SCALE_FLOAT);
-                Matrix.scaleM(modelViewMatrix, 0, OBJECT_SCALE_FLOAT, OBJECT_SCALE_FLOAT, OBJECT_SCALE_FLOAT);
-                }
-            else
-                {
-                Matrix.rotateM(modelViewMatrix, 0, 90.0f, 1.0f, 0, 0);
-                Matrix.scaleM(modelViewMatrix, 0, kBuildingScale, kBuildingScale, kBuildingScale);
+                TrackableResult trackableResult = state.getTrackableResult(tIdx);
+                Trackable trackable = trackableResult.getTrackable();
+                printUserData(trackable);
                 }
 
-            Matrix.multiplyMM(modelViewProjection, 0, vuforiaAppSession.getProjectionMatrix().getData(), 0, modelViewMatrix, 0);
-
-            // activate the shader program and bind the vertex/normal/tex coords
-            GLES20.glUseProgram(shaderProgramID);
-
-            if (!mActivity.isExtendedTrackingActive())
-                {
-                int textureIndex = textureNames.indexOf(trackable.getName().toLowerCase());
-
-                GLES20.glVertexAttribPointer(vertexHandle, 3, GLES20.GL_FLOAT, false, 0, mTeapot.getVertices());
-                GLES20.glVertexAttribPointer(normalHandle, 3, GLES20.GL_FLOAT, false, 0, mTeapot.getNormals());
-                GLES20.glVertexAttribPointer(textureCoordHandle, 2, GLES20.GL_FLOAT, false, 0, mTeapot.getTexCoords());
-
-                GLES20.glEnableVertexAttribArray(vertexHandle);
-                GLES20.glEnableVertexAttribArray(normalHandle);
-                GLES20.glEnableVertexAttribArray(textureCoordHandle);
-
-                GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-                GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextures.get(textureIndex).mTextureID[0]);
-                GLES20.glUniform1i(texSampler2DHandle, 0);
-
-                // pass the model view matrix to the shader
-                GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false, modelViewProjection, 0);
-
-                // finally draw the teapot
-                GLES20.glDrawElements(GLES20.GL_TRIANGLES, mTeapot.getNumObjectIndex(), GLES20.GL_UNSIGNED_SHORT, mTeapot.getIndices());
-
-                // disable the enabled arrays
-                GLES20.glDisableVertexAttribArray(vertexHandle);
-                GLES20.glDisableVertexAttribArray(normalHandle);
-                GLES20.glDisableVertexAttribArray(textureCoordHandle);
-                }
-            else
-                {
-                int textureIndex = textureNames.indexOf("building");
-
-                GLES20.glDisable(GLES20.GL_CULL_FACE);
-                GLES20.glVertexAttribPointer(vertexHandle, 3, GLES20.GL_FLOAT, false, 0, mBuildingsModel.getVertices());
-                GLES20.glVertexAttribPointer(normalHandle, 3, GLES20.GL_FLOAT, false, 0, mBuildingsModel.getNormals());
-                GLES20.glVertexAttribPointer(textureCoordHandle, 2, GLES20.GL_FLOAT, false, 0, mBuildingsModel.getTexCoords());
-
-                GLES20.glEnableVertexAttribArray(vertexHandle);
-                GLES20.glEnableVertexAttribArray(normalHandle);
-                GLES20.glEnableVertexAttribArray(textureCoordHandle);
-
-                GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-                GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextures.get(textureIndex).mTextureID[0]);
-                GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false, modelViewProjection, 0);
-                GLES20.glUniform1i(texSampler2DHandle, 0);
-                GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, mBuildingsModel.getNumObjectVertex());
-
-                SampleUtils.checkGLError("Renderer DrawBuildings");
-                }
-
-            SampleUtils.checkGLError("Render Frame");
+            mRenderer.end();
             }
+        else
+            {
+            GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
-        GLES20.glDisable(GLES20.GL_DEPTH_TEST);
+            State state = mRenderer.begin();
+            mRenderer.drawVideoBackground();
 
-        mRenderer.end();
+            GLES20.glEnable(GLES20.GL_DEPTH_TEST);
+
+            // Set the viewport
+            int[] viewport = vuforiaAppSession.getViewport();
+            GLES20.glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+
+            // handle face culling, we need to detect if we are using reflection
+            // to determine the direction of the culling
+            GLES20.glEnable(GLES20.GL_CULL_FACE);
+            GLES20.glCullFace(GLES20.GL_BACK);
+            if (Renderer.getInstance().getVideoBackgroundConfig().getReflection() == VIDEO_BACKGROUND_REFLECTION.VIDEO_BACKGROUND_REFLECTION_ON)
+                GLES20.glFrontFace(GLES20.GL_CW); // Front camera
+            else
+                GLES20.glFrontFace(GLES20.GL_CCW); // Back camera
+
+            // did we find any trackables this frame?
+            for (int tIdx = 0; tIdx < state.getNumTrackableResults(); tIdx++)
+                {
+                TrackableResult trackableResult = state.getTrackableResult(tIdx);
+                Trackable trackable = trackableResult.getTrackable();
+                printUserData(trackable);
+                Matrix44F modelViewMatrix_Vuforia = Tool.convertPose2GLMatrix(trackableResult.getPose());
+                float[] modelViewMatrix = modelViewMatrix_Vuforia.getData();
+
+                // deal with the modelview and projection matrices
+                float[] modelViewProjection = new float[16];
+
+                if (!mActivity.isExtendedTrackingActive())
+                    {
+                    Matrix.translateM(modelViewMatrix, 0, 0.0f, 0.0f, OBJECT_SCALE_FLOAT);
+                    Matrix.scaleM(modelViewMatrix, 0, OBJECT_SCALE_FLOAT, OBJECT_SCALE_FLOAT, OBJECT_SCALE_FLOAT);
+                    }
+                else
+                    {
+                    Matrix.rotateM(modelViewMatrix, 0, 90.0f, 1.0f, 0, 0);
+                    Matrix.scaleM(modelViewMatrix, 0, kBuildingScale, kBuildingScale, kBuildingScale);
+                    }
+
+                Matrix.multiplyMM(modelViewProjection, 0, vuforiaAppSession.getProjectionMatrix().getData(), 0, modelViewMatrix, 0);
+
+                // activate the shader program and bind the vertex/normal/tex coords
+                GLES20.glUseProgram(shaderProgramID);
+
+                if (!mActivity.isExtendedTrackingActive())
+                    {
+                    int textureIndex = textureNames.indexOf(trackable.getName().toLowerCase());
+
+                    GLES20.glVertexAttribPointer(vertexHandle, 3, GLES20.GL_FLOAT, false, 0, mTeapot.getVertices());
+                    GLES20.glVertexAttribPointer(normalHandle, 3, GLES20.GL_FLOAT, false, 0, mTeapot.getNormals());
+                    GLES20.glVertexAttribPointer(textureCoordHandle, 2, GLES20.GL_FLOAT, false, 0, mTeapot.getTexCoords());
+
+                    GLES20.glEnableVertexAttribArray(vertexHandle);
+                    GLES20.glEnableVertexAttribArray(normalHandle);
+                    GLES20.glEnableVertexAttribArray(textureCoordHandle);
+
+                    GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+                    GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextures.get(textureIndex).mTextureID[0]);
+                    GLES20.glUniform1i(texSampler2DHandle, 0);
+
+                    // pass the model view matrix to the shader
+                    GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false, modelViewProjection, 0);
+
+                    // finally draw the teapot
+                    GLES20.glDrawElements(GLES20.GL_TRIANGLES, mTeapot.getNumObjectIndex(), GLES20.GL_UNSIGNED_SHORT, mTeapot.getIndices());
+
+                    // disable the enabled arrays
+                    GLES20.glDisableVertexAttribArray(vertexHandle);
+                    GLES20.glDisableVertexAttribArray(normalHandle);
+                    GLES20.glDisableVertexAttribArray(textureCoordHandle);
+                    }
+                else
+                    {
+                    int textureIndex = textureNames.indexOf("building");
+
+                    GLES20.glDisable(GLES20.GL_CULL_FACE);
+                    GLES20.glVertexAttribPointer(vertexHandle, 3, GLES20.GL_FLOAT, false, 0, mBuildingsModel.getVertices());
+                    GLES20.glVertexAttribPointer(normalHandle, 3, GLES20.GL_FLOAT, false, 0, mBuildingsModel.getNormals());
+                    GLES20.glVertexAttribPointer(textureCoordHandle, 2, GLES20.GL_FLOAT, false, 0, mBuildingsModel.getTexCoords());
+
+                    GLES20.glEnableVertexAttribArray(vertexHandle);
+                    GLES20.glEnableVertexAttribArray(normalHandle);
+                    GLES20.glEnableVertexAttribArray(textureCoordHandle);
+
+                    GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+                    GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextures.get(textureIndex).mTextureID[0]);
+                    GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false, modelViewProjection, 0);
+                    GLES20.glUniform1i(texSampler2DHandle, 0);
+                    GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, mBuildingsModel.getNumObjectVertex());
+
+                    SampleUtils.checkGLError("Renderer DrawBuildings");
+                    }
+
+                SampleUtils.checkGLError("Render Frame");
+                }
+
+            GLES20.glDisable(GLES20.GL_DEPTH_TEST);
+
+            mRenderer.end();
+            }
         }
 
     private void printUserData(Trackable trackable)
@@ -274,5 +291,11 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
         {
         this.mTextures = textures;
         this.textureNames = textureNames;
+        }
+
+    public boolean setDisplayEnabled(boolean displayEnabled)
+        {
+        this.displayEnabled = displayEnabled;
+        return true;
         }
     }

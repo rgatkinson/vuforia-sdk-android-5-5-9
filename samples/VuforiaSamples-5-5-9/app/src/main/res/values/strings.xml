@@ -50,6 +50,7 @@
     
     <string name="menu_back">Vuforia Samples</string>
     <string name="menu_extended_tracking">Extended Tracking</string>
+    <string name="menu_enable_display">Enable Display</string>
     <string name="menu_character_mode">Character Mode</string>
     <string name="menu_flash">Flash</string>
     <string name="menu_flash_error_on">Unable to turn on flash</string>
