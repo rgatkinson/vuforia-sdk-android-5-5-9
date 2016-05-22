@@ -596,7 +596,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
 
         if (deviceHasBackCamera && deviceHasFrontCamera)
             {
-            group = mSampleAppMenu.addGroup(getString(R.string.menu_camera), true);
+            group = mSampleAppMenu.addGroup(String.format("%s (#=%d)", getString(R.string.menu_camera), Camera.getNumberOfCameras()), true);
             group.addRadioItem(getString(R.string.menu_camera_front), CMD_CAMERA_FRONT, false);
             group.addRadioItem(getString(R.string.menu_camera_back), CMD_CAMERA_REAR, true);
             }
