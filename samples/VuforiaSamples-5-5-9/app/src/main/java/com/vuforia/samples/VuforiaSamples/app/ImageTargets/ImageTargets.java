@@ -11,6 +11,8 @@ countries.
 package com.vuforia.samples.VuforiaSamples.app.ImageTargets;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Vector;
 
 import android.app.Activity;
@@ -63,42 +65,41 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
 
     private static final String LOGTAG = "ImageTargets";
 
-    SampleApplicationSession vuforiaAppSession;
+    SampleApplicationSession            vuforiaAppSession;
 
-    private DataSet mCurrentDataset;
-    private int     mCurrentDatasetSelectionIndex = 0;
-    private int     mStartDatasetsIndex = 0;
-    private int     mDatasetsNumber = 0;
-    private ArrayList<String> mDatasetStrings = new ArrayList<String>();
+    private DataSet                     mCurrentDataset;
+    private int                         mCurrentDatasetSelectionIndex = 0;
+    private int                         mStartDatasetsIndex = 0;
+    private int                         mDatasetsNumber = 0;
 
     // Our OpenGL view:
-    private SampleApplicationGLView mGlView;
+    private SampleApplicationGLView     mGlView;
 
     // Our renderer:
-    private ImageTargetRenderer mRenderer;
+    private ImageTargetRenderer         mRenderer;
 
-    private GestureDetector mGestureDetector;
+    private GestureDetector             mGestureDetector;
 
-    // The textures we will use for rendering:
-    private Vector<Texture> mTextures;
-
-    private boolean mSwitchDatasetAsap  = false;
-    private boolean mFlash              = false;
-    private boolean mContAutofocus      = false;
-    private boolean mExtendedTracking   = false;
-
-    private View mFlashOptionView;
-
-    private RelativeLayout mUILayout;
-
-    private SampleAppMenu mSampleAppMenu;
-
-    LoadingDialogHandler loadingDialogHandler = new LoadingDialogHandler(this);
+    private boolean                     mSwitchDatasetAsap  = false;
+    private boolean                     mFlash              = false;
+    private boolean                     mContAutofocus      = false;
+    private boolean                     mExtendedTracking   = false;
+    private View                        mFlashOptionView;
+    private RelativeLayout              mUILayout;
+    private SampleAppMenu               mSampleAppMenu;
+    LoadingDialogHandler                loadingDialogHandler = new LoadingDialogHandler(this);
 
     // Alert Dialog used to display SDK errors
-    private AlertDialog mErrorDialog;
+    private AlertDialog                 mErrorDialog;
 
-    boolean mIsDroidDevice = false;
+    boolean                             mIsDroidDevice = false;
+
+    // The textures we will use for rendering:
+    private Vector<Texture>             mTextures;
+    private ArrayList<String>           mDatasetStrings = new ArrayList<String>();
+    private String[]                    datasetRoots = new String[] {"StonesAndChips", "Tarmac", "FTC"};
+    private List<String>                textureNames = Arrays.asList("building", "stones", "chips", "tarmac", "first");
+
 
     //----------------------------------------------------------------------------------------------
     // Life cycle
@@ -113,8 +114,10 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
         vuforiaAppSession = new SampleApplicationSession(this);
 
         startLoadingAnimation();
-        mDatasetStrings.add("StonesAndChips.xml");
-        mDatasetStrings.add("Tarmac.xml");
+        for (String s : datasetRoots)
+            {
+            mDatasetStrings.add(s + ".xml");
+            }
 
         vuforiaAppSession.initAR(this, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
@@ -159,10 +162,11 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
     // We want to load specific textures from the APK, which we will later use for rendering.
     private void loadTextures()
         {
+        mTextures.add(Texture.loadTextureFromApk("ImageTargets/Buildings.jpeg", getAssets()));
         mTextures.add(Texture.loadTextureFromApk("TextureTeapotBrass.png", getAssets()));
         mTextures.add(Texture.loadTextureFromApk("TextureTeapotBlue.png", getAssets()));
         mTextures.add(Texture.loadTextureFromApk("TextureTeapotRed.png", getAssets()));
-        mTextures.add(Texture.loadTextureFromApk("ImageTargets/Buildings.jpeg", getAssets()));
+        mTextures.add(Texture.loadTextureFromApk("TextureTeapotBrass.png", getAssets()));
         }
 
     // Called when the activity will start interacting with the user.
@@ -279,7 +283,8 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
         mGlView.init(translucent, depthSize, stencilSize);
 
         mRenderer = new ImageTargetRenderer(this, vuforiaAppSession);
-        mRenderer.setTextures(mTextures);
+
+        mRenderer.setTextures(mTextures, textureNames);
         mGlView.setRenderer(mRenderer);
         }
 
@@ -598,7 +603,8 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
         mDatasetsNumber = mDatasetStrings.size();
 
         group.addRadioItem("Stones & Chips", mStartDatasetsIndex, true);
-        group.addRadioItem("Tarmac", mStartDatasetsIndex + 1, false);
+        group.addRadioItem("Tarmac",         mStartDatasetsIndex + 1, false);
+        group.addRadioItem("FIRST",          mStartDatasetsIndex + 2, false);
 
         mSampleAppMenu.attachMenu();
         }

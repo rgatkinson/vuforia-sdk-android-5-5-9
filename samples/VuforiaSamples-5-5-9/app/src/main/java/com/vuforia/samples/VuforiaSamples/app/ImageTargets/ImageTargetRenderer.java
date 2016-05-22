@@ -10,6 +10,8 @@ countries.
 package com.vuforia.samples.VuforiaSamples.app.ImageTargets;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Vector;
 
 import javax.microedition.khronos.egl.EGLConfig;
@@ -46,33 +48,27 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
 
     private static final String LOGTAG = "ImageTargetRenderer";
 
-    private SampleApplicationSession vuforiaAppSession;
-    private ImageTargets mActivity;
-
-    private Vector<Texture> mTextures;
-
-    private int shaderProgramID;
-
-    private int vertexHandle;
-
-    private int normalHandle;
-
-    private int textureCoordHandle;
-
-    private int mvpMatrixHandle;
-
-    private int texSampler2DHandle;
-
-    private Teapot mTeapot;
-
-    private float kBuildingScale = 12.0f;
-    private SampleApplication3DModel mBuildingsModel;
-
-    private Renderer mRenderer;
-
-    boolean mIsActive = false;
+    private SampleApplicationSession    vuforiaAppSession;
+    private ImageTargets                mActivity;
+    private Vector<Texture>             mTextures;
+    private List<String>                textureNames;
+    private int                         shaderProgramID;
+    private int                         vertexHandle;
+    private int                         normalHandle;
+    private int                         textureCoordHandle;
+    private int                         mvpMatrixHandle;
+    private int                         texSampler2DHandle;
+    private Teapot                      mTeapot;
+    private float                       kBuildingScale = 12.0f;
+    private SampleApplication3DModel    mBuildingsModel;
+    private Renderer                    mRenderer;
+    boolean                             mIsActive = false;
 
     private static final float OBJECT_SCALE_FLOAT = 3.0f;
+
+    //----------------------------------------------------------------------------------------------
+    // Construction
+    //----------------------------------------------------------------------------------------------
 
     public ImageTargetRenderer(ImageTargets activity, SampleApplicationSession session)
         {
@@ -80,6 +76,9 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
         vuforiaAppSession = session;
         }
 
+    //----------------------------------------------------------------------------------------------
+    // Operations
+    //----------------------------------------------------------------------------------------------
 
     // Called to draw the current frame.
     @Override
@@ -189,9 +188,6 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
             Matrix44F modelViewMatrix_Vuforia = Tool.convertPose2GLMatrix(result.getPose());
             float[] modelViewMatrix = modelViewMatrix_Vuforia.getData();
 
-            int textureIndex = trackable.getName().equalsIgnoreCase("stones") ? 0 : 1;
-            textureIndex = trackable.getName().equalsIgnoreCase("tarmac") ? 2 : textureIndex;
-
             // deal with the modelview and projection matrices
             float[] modelViewProjection = new float[16];
 
@@ -213,6 +209,8 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
 
             if (!mActivity.isExtendedTrackingActive())
                 {
+                int textureIndex = textureNames.indexOf(trackable.getName().toLowerCase());
+
                 GLES20.glVertexAttribPointer(vertexHandle, 3, GLES20.GL_FLOAT, false, 0, mTeapot.getVertices());
                 GLES20.glVertexAttribPointer(normalHandle, 3, GLES20.GL_FLOAT, false, 0, mTeapot.getNormals());
                 GLES20.glVertexAttribPointer(textureCoordHandle, 2, GLES20.GL_FLOAT, false, 0, mTeapot.getTexCoords());
@@ -221,7 +219,6 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
                 GLES20.glEnableVertexAttribArray(normalHandle);
                 GLES20.glEnableVertexAttribArray(textureCoordHandle);
 
-                // activate texture 0, bind it, and pass to shader
                 GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
                 GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextures.get(textureIndex).mTextureID[0]);
                 GLES20.glUniform1i(texSampler2DHandle, 0);
@@ -239,6 +236,8 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
                 }
             else
                 {
+                int textureIndex = textureNames.indexOf("building");
+
                 GLES20.glDisable(GLES20.GL_CULL_FACE);
                 GLES20.glVertexAttribPointer(vertexHandle, 3, GLES20.GL_FLOAT, false, 0, mBuildingsModel.getVertices());
                 GLES20.glVertexAttribPointer(normalHandle, 3, GLES20.GL_FLOAT, false, 0, mBuildingsModel.getNormals());
@@ -249,7 +248,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
                 GLES20.glEnableVertexAttribArray(textureCoordHandle);
 
                 GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-                GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextures.get(3).mTextureID[0]);
+                GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextures.get(textureIndex).mTextureID[0]);
                 GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false, modelViewProjection, 0);
                 GLES20.glUniform1i(texSampler2DHandle, 0);
                 GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, mBuildingsModel.getNumObjectVertex());
@@ -271,8 +270,9 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
         Log.d(LOGTAG, "UserData:Retreived User Data	\"" + userData + "\"");
         }
 
-    public void setTextures(Vector<Texture> textures)
+    public void setTextures(Vector<Texture> textures, List<String> textureNames)
         {
-        mTextures = textures;
+        this.mTextures = textures;
+        this.textureNames = textureNames;
         }
     }
