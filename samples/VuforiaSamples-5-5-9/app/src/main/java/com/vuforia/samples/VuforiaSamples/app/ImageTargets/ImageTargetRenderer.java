@@ -117,7 +117,6 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
         vuforiaAppSession.onSurfaceChanged(width, height);
         }
 
-
     // Function for initializing the renderer.
     private void initRendering()
         {
@@ -136,9 +135,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
             GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, t.mWidth, t.mHeight, 0, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, t.mData);
             }
 
-        shaderProgramID = SampleUtils.createProgramFromShaderSrc(
-                CubeShaders.CUBE_MESH_VERTEX_SHADER,
-                CubeShaders.CUBE_MESH_FRAGMENT_SHADER);
+        shaderProgramID = SampleUtils.createProgramFromShaderSrc(CubeShaders.CUBE_MESH_VERTEX_SHADER, CubeShaders.CUBE_MESH_FRAGMENT_SHADER);
 
         vertexHandle = GLES20.glGetAttribLocation(shaderProgramID, "vertexPosition");
         normalHandle = GLES20.glGetAttribLocation(shaderProgramID, "vertexNormal");
@@ -261,7 +258,6 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
                 }
 
             SampleUtils.checkGLError("Render Frame");
-
             }
 
         GLES20.glDisable(GLES20.GL_DEPTH_TEST);
