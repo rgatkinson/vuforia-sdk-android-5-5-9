@@ -1,0 +1,14 @@
+﻿*.logcat
+*.logcat.?
+*.logcat.?.gz
+*.iml
+local.properties
+FtcCommon*.aar
+Hardware*.aar
+RobotCore*.aar
+.gradle/
+.idea/
+out/*.aar
+build/
+.DS_Store
+
