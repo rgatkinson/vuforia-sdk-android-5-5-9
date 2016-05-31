@@ -33,8 +33,7 @@ public interface SampleApplicationControl
     boolean doDeinitTrackers();
 
     // This callback is called after the Vuforia initialization is complete,
-    // the trackers are initialized, their data loaded and
-    // tracking is ready to start
+    // the trackers are initialized, their data loaded and tracking is ready to start
     void onInitARDone(SampleApplicationException e);
 
     // This callback is called every cycle

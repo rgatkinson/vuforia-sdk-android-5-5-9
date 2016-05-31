@@ -23,9 +23,11 @@ import android.content.res.Configuration;
 import android.graphics.Color;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
+import android.hardware.camera2.CameraManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.AndroidException;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -67,37 +69,37 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
 
     SampleApplicationSession            vuforiaAppSession;
 
-    private DataSet                     mCurrentDataset;
+    private DataSet                     currentDataset;
     private int                         mCurrentDatasetSelectionIndex = 0;
     private int                         mStartDatasetsIndex = 0;
     private int                         mDatasetsNumber = 0;
 
     // Our OpenGL view:
-    private SampleApplicationGLView     mGlView;
+    private SampleApplicationGLView glView;
 
     // Our renderer:
-    private ImageTargetRenderer         mRenderer;
+    private ImageTargetRenderer         imageTargetRenderer;
 
     private GestureDetector             mGestureDetector;
 
-    private boolean                     mSwitchDatasetAsap  = false;
+    private boolean                     switchDatasetAsap = false;
     private boolean                     mFlash              = false;
-    private boolean                     mContAutofocus      = false;
+    private boolean                     continuousAutoFocus = false;
     private boolean                     mExtendedTracking   = false;
     private boolean                     mDisplayEnabled     = true;
     private View                        mFlashOptionView;
-    private RelativeLayout              mUILayout;
+    private RelativeLayout uiLayout;
     private SampleAppMenu               mSampleAppMenu;
     LoadingDialogHandler                loadingDialogHandler = new LoadingDialogHandler(this);
 
     // Alert Dialog used to display SDK errors
-    private AlertDialog                 mErrorDialog;
+    private AlertDialog                 errorDialog;
 
-    boolean                             mIsDroidDevice = false;
+    boolean                             isDroidDevice = false;
 
     // The textures we will use for rendering:
-    private Vector<Texture>             mTextures;
-    private ArrayList<String>           mDatasetStrings = new ArrayList<String>();
+    private Vector<Texture>             textures;
+    private ArrayList<String>           datasetFileNames = new ArrayList<String>();
     private String[]                    datasetRoots = new String[] {"StonesAndChips", "Tarmac", "FTC"};
     private List<String>                textureNames = Arrays.asList("building", "stones", "chips", "tarmac", "first");
 
@@ -117,7 +119,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
         startLoadingAnimation();
         for (String s : datasetRoots)
             {
-            mDatasetStrings.add(s + ".xml");
+            datasetFileNames.add(s + ".xml");
             }
 
         vuforiaAppSession.initAR(this, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -125,10 +127,10 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
         mGestureDetector = new GestureDetector(this, new GestureListener());
 
         // Load any sample specific textures:
-        mTextures = new Vector<Texture>();
+        textures = new Vector<Texture>();
         loadTextures();
 
-        mIsDroidDevice = android.os.Build.MODEL.toLowerCase().startsWith("droid");
+        isDroidDevice = android.os.Build.MODEL.toLowerCase().startsWith("droid");
         }
 
     // Process Single Tap event to trigger autofocus
@@ -163,11 +165,11 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
     // We want to load specific textures from the APK, which we will later use for rendering.
     private void loadTextures()
         {
-        mTextures.add(Texture.loadTextureFromApk("ImageTargets/Buildings.jpeg", getAssets()));
-        mTextures.add(Texture.loadTextureFromApk("TextureTeapotBrass.png", getAssets()));
-        mTextures.add(Texture.loadTextureFromApk("TextureTeapotBlue.png", getAssets()));
-        mTextures.add(Texture.loadTextureFromApk("TextureTeapotRed.png", getAssets()));
-        mTextures.add(Texture.loadTextureFromApk("TextureTeapotBrass.png", getAssets()));
+        textures.add(Texture.loadTextureFromApk("ImageTargets/Buildings.jpeg", getAssets()));
+        textures.add(Texture.loadTextureFromApk("TextureTeapotBrass.png", getAssets()));
+        textures.add(Texture.loadTextureFromApk("TextureTeapotBlue.png", getAssets()));
+        textures.add(Texture.loadTextureFromApk("TextureTeapotRed.png", getAssets()));
+        textures.add(Texture.loadTextureFromApk("TextureTeapotBrass.png", getAssets()));
         }
 
     // Called when the activity will start interacting with the user.
@@ -177,7 +179,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
         super.onResume();
 
         // This is needed for some Droid devices to force portrait
-        if (mIsDroidDevice)
+        if (isDroidDevice)
             {
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -193,10 +195,10 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
             }
 
         // Resume the GL view:
-        if (mGlView != null)
+        if (glView != null)
             {
-            mGlView.setVisibility(View.VISIBLE);
-            mGlView.onResume();
+            glView.setVisibility(View.VISIBLE);
+            glView.onResume();
             }
         }
 
@@ -218,10 +220,10 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
         Log.d(LOGTAG, "onPause");
         super.onPause();
 
-        if (mGlView != null)
+        if (glView != null)
             {
-            mGlView.setVisibility(View.INVISIBLE);
-            mGlView.onPause();
+            glView.setVisibility(View.INVISIBLE);
+            glView.onPause();
             }
 
         // Turn off the flash
@@ -266,8 +268,8 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
             }
 
         // Unload texture:
-        mTextures.clear();
-        mTextures = null;
+        textures.clear();
+        textures = null;
 
         System.gc();
         }
@@ -280,30 +282,30 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
         int stencilSize = 0;
         boolean translucent = Vuforia.requiresAlpha();
 
-        mGlView = new SampleApplicationGLView(this);
-        mGlView.init(translucent, depthSize, stencilSize);
+        glView = new SampleApplicationGLView(this);  // xyzzy
+        glView.init(translucent, depthSize, stencilSize);
 
-        mRenderer = new ImageTargetRenderer(this, vuforiaAppSession);
+        imageTargetRenderer = new ImageTargetRenderer(this, vuforiaAppSession);
 
-        mRenderer.setTextures(mTextures, textureNames);
-        mGlView.setRenderer(mRenderer);
+        imageTargetRenderer.setTextures(textures, textureNames);
+        glView.setRenderer(imageTargetRenderer);
         }
 
     private void startLoadingAnimation()
         {
-        mUILayout = (RelativeLayout) View.inflate(this, R.layout.camera_overlay, null);
+        uiLayout = (RelativeLayout) View.inflate(this, R.layout.camera_overlay, null);
 
-        mUILayout.setVisibility(View.VISIBLE);
-        mUILayout.setBackgroundColor(Color.BLACK);
+        uiLayout.setVisibility(View.VISIBLE);
+        uiLayout.setBackgroundColor(Color.BLACK);
 
         // Gets a reference to the loading dialog
-        loadingDialogHandler.mLoadingDialogContainer = mUILayout.findViewById(R.id.loading_indicator);
+        loadingDialogHandler.loadingDialogContainer = uiLayout.findViewById(R.id.loading_indicator);
 
         // Shows the loading indicator at start
         loadingDialogHandler.sendEmptyMessage(LoadingDialogHandler.SHOW_LOADING_DIALOG);
 
         // Adds the inflated layout to the view
-        addContentView(mUILayout, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+        addContentView(uiLayout, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
         }
 
     // Methods to load and destroy tracking data.
@@ -315,22 +317,22 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
         if (objectTracker == null)
             return false;
 
-        if (mCurrentDataset == null)
-            mCurrentDataset = objectTracker.createDataSet();
+        if (currentDataset == null)
+            currentDataset = objectTracker.createDataSet();
 
-        if (mCurrentDataset == null)
+        if (currentDataset == null)
             return false;
 
-        if (!mCurrentDataset.load(mDatasetStrings.get(mCurrentDatasetSelectionIndex), STORAGE_TYPE.STORAGE_APPRESOURCE))
+        if (!currentDataset.load(datasetFileNames.get(mCurrentDatasetSelectionIndex), STORAGE_TYPE.STORAGE_APPRESOURCE))
             return false;
 
-        if (!objectTracker.activateDataSet(mCurrentDataset))
+        if (!objectTracker.activateDataSet(currentDataset))
             return false;
 
-        int numTrackables = mCurrentDataset.getNumTrackables();
+        int numTrackables = currentDataset.getNumTrackables();
         for (int count = 0; count < numTrackables; count++)
             {
-            Trackable trackable = mCurrentDataset.getTrackable(count);
+            Trackable trackable = currentDataset.getTrackable(count);
             if (isExtendedTrackingActive())
                 {
                 trackable.startExtendedTracking();
@@ -356,18 +358,18 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
         if (objectTracker == null)
             return false;
 
-        if (mCurrentDataset != null && mCurrentDataset.isActive())
+        if (currentDataset != null && currentDataset.isActive())
             {
-            if (objectTracker.getActiveDataSet().equals(mCurrentDataset) && !objectTracker.deactivateDataSet(mCurrentDataset))
+            if (objectTracker.getActiveDataSet().equals(currentDataset) && !objectTracker.deactivateDataSet(currentDataset))
                 {
                 result = false;
                 }
-            else if (!objectTracker.destroyDataSet(mCurrentDataset))
+            else if (!objectTracker.destroyDataSet(currentDataset))
                 {
                 result = false;
                 }
 
-            mCurrentDataset = null;
+            currentDataset = null;
             }
 
         return result;
@@ -381,19 +383,19 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
             {
             initApplicationAR();
 
-            mRenderer.mIsActive = true;
+            imageTargetRenderer.isActive = true;
 
             // Now add the GL surface view. It is important
             // that the OpenGL ES surface view gets added
             // BEFORE the camera is started and video
             // background is configured.
-            addContentView(mGlView, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+            addContentView(glView, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 
             // Sets the UILayout to be drawn in front of the camera
-            mUILayout.bringToFront();
+            uiLayout.bringToFront();
 
             // Sets the layout background to transparent
-            mUILayout.setBackgroundColor(Color.TRANSPARENT);
+            uiLayout.setBackgroundColor(Color.TRANSPARENT);
 
             try
                 {
@@ -407,11 +409,11 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
             boolean result = CameraDevice.getInstance().setFocusMode(CameraDevice.FOCUS_MODE.FOCUS_MODE_CONTINUOUSAUTO);
 
             if (result)
-                mContAutofocus = true;
+                continuousAutoFocus = true;
             else
                 Log.e(LOGTAG, "Unable to enable continuous autofocus");
 
-            mSampleAppMenu = new SampleAppMenu(this, this, "Image Targets", mGlView, mUILayout, null);
+            mSampleAppMenu = new SampleAppMenu(this, this, "Image Targets", glView, uiLayout, null);
             setSampleAppMenuSettings();
             }
         else
@@ -430,9 +432,9 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
             {
             public void run()
                 {
-                if (mErrorDialog != null)
+                if (errorDialog != null)
                     {
-                    mErrorDialog.dismiss();
+                    errorDialog.dismiss();
                     }
 
                 // Generates an Alert Dialog to show the error message
@@ -452,8 +454,8 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
                                         }
                                     });
 
-                mErrorDialog = builder.create();
-                mErrorDialog.show();
+                errorDialog = builder.create();
+                errorDialog.show();
                 }
             });
         }
@@ -461,12 +463,14 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
     @Override
     public void onVuforiaUpdate(State state)
         {
-        if (mSwitchDatasetAsap)
+        // TODO: report tracking
+
+        if (switchDatasetAsap)
             {
-            mSwitchDatasetAsap = false;
+            switchDatasetAsap = false;
             TrackerManager tm = TrackerManager.getInstance();
             ObjectTracker ot = (ObjectTracker) tm.getTracker(ObjectTracker.getClassType());
-            if (ot == null || mCurrentDataset == null || ot.getActiveDataSet() == null)
+            if (ot == null || currentDataset == null || ot.getActiveDataSet() == null)
                 {
                 Log.d(LOGTAG, "Failed to swap datasets");
                 return;
@@ -578,7 +582,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
 
         group = mSampleAppMenu.addGroup("", true);
         group.addSelectionItem(getString(R.string.menu_extended_tracking),  CMD_EXTENDED_TRACKING,  false);
-        group.addSelectionItem(getString(R.string.menu_contAutofocus),      CMD_AUTOFOCUS,          mContAutofocus);
+        group.addSelectionItem(getString(R.string.menu_contAutofocus),      CMD_AUTOFOCUS, continuousAutoFocus);
         group.addSelectionItem(getString(R.string.menu_enable_display),     CMD_ENABLE_DISPLAY,     mDisplayEnabled);
         mFlashOptionView = group.addSelectionItem(getString(R.string.menu_flash), CMD_FLASH, false);
 
@@ -596,14 +600,26 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
 
         if (deviceHasBackCamera && deviceHasFrontCamera)
             {
-            group = mSampleAppMenu.addGroup(String.format("%s (#=%d)", getString(R.string.menu_camera), Camera.getNumberOfCameras()), true);
+            int numberOfCameras = Camera.getNumberOfCameras();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+                {
+                try {
+                    CameraManager cameraManager = (CameraManager)this.getSystemService(CAMERA_SERVICE);
+                    numberOfCameras = cameraManager.getCameraIdList().length;
+                    }
+                catch (AndroidException ignored)
+                    {
+                    }
+                }
+
+            group = mSampleAppMenu.addGroup(String.format("%s (#=%d)", getString(R.string.menu_camera), numberOfCameras), true);
             group.addRadioItem(getString(R.string.menu_camera_front), CMD_CAMERA_FRONT, false);
             group.addRadioItem(getString(R.string.menu_camera_back), CMD_CAMERA_REAR, true);
             }
 
         group = mSampleAppMenu.addGroup(getString(R.string.menu_datasets), true);
         mStartDatasetsIndex = CMD_DATASET_START_INDEX;
-        mDatasetsNumber = mDatasetStrings.size();
+        mDatasetsNumber = datasetFileNames.size();
 
         group.addRadioItem("Stones & Chips", mStartDatasetsIndex, true);
         group.addRadioItem("Tarmac",         mStartDatasetsIndex + 1, false);
@@ -639,13 +655,13 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
 
             case CMD_AUTOFOCUS:
 
-                if (mContAutofocus)
+                if (continuousAutoFocus)
                     {
                     result = CameraDevice.getInstance().setFocusMode(CameraDevice.FOCUS_MODE.FOCUS_MODE_NORMAL);
 
                     if (result)
                         {
-                        mContAutofocus = false;
+                        continuousAutoFocus = false;
                         }
                     else
                         {
@@ -659,7 +675,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
 
                     if (result)
                         {
-                        mContAutofocus = true;
+                        continuousAutoFocus = true;
                         }
                     else
                         {
@@ -674,14 +690,14 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
                 {
                 if (mDisplayEnabled)
                     {
-                    if (mRenderer.setDisplayEnabled(false))
+                    if (imageTargetRenderer.setDisplayEnabled(false))
                         {
                         mDisplayEnabled = false;
                         }
                     }
                 else
                     {
-                    if (mRenderer.setDisplayEnabled(true))
+                    if (imageTargetRenderer.setDisplayEnabled(true))
                         {
                         mDisplayEnabled = true;
                         }
@@ -725,9 +741,9 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
                 break;
 
             case CMD_EXTENDED_TRACKING:
-                for (int tIdx = 0; tIdx < mCurrentDataset.getNumTrackables(); tIdx++)
+                for (int tIdx = 0; tIdx < currentDataset.getNumTrackables(); tIdx++)
                     {
-                    Trackable trackable = mCurrentDataset.getTrackable(tIdx);
+                    Trackable trackable = currentDataset.getTrackable(tIdx);
 
                     if (!mExtendedTracking)
                         {
@@ -763,7 +779,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
             default:
                 if (command >= mStartDatasetsIndex && command < mStartDatasetsIndex + mDatasetsNumber)
                     {
-                    mSwitchDatasetAsap = true;
+                    switchDatasetAsap = true;
                     mCurrentDatasetSelectionIndex = command - mStartDatasetsIndex;
                     }
                 break;

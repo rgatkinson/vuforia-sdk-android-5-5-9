@@ -34,7 +34,6 @@ import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
-import android.view.Surface;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.view.WindowManager;
@@ -275,7 +274,7 @@ public class TextReco extends Activity implements SampleApplicationControl,
         mUILayout.setBackgroundColor(Color.BLACK);
         
         // Gets a reference to the loading dialog
-        loadingDialogHandler.mLoadingDialogContainer = mUILayout
+        loadingDialogHandler.loadingDialogContainer = mUILayout
             .findViewById(R.id.loading_indicator);
         
         // Shows the loading indicator at start

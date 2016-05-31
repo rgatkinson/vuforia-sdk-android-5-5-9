@@ -362,7 +362,7 @@ public class UserDefinedTargets extends Activity implements
         mCameraButton = mUILayout.findViewById(R.id.camera_button);
         
         // Gets a reference to the loading dialog container
-        loadingDialogHandler.mLoadingDialogContainer = mUILayout
+        loadingDialogHandler.loadingDialogContainer = mUILayout
             .findViewById(R.id.loading_layout);
         
         startUserDefinedTargets();

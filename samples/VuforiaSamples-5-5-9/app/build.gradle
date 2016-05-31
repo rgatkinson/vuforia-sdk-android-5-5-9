@@ -5,7 +5,8 @@ def NATIVE_LIB_DIR = 'build/lib'
 def JAR_DIR = 'build/java/vuforia'
 
 android {
-    compileSdkVersion 19
+    // https://medium.com/google-developers/picking-your-compilesdkversion-minsdkversion-targetsdkversion-a098a0341ebd#.z27cl4fx0
+    compileSdkVersion 23    // changing your compileSdkVersion does not change runtime behavior!
     buildToolsVersion "22.0.1"
 
     sourceSets.main {
@@ -15,8 +16,8 @@ android {
 
     defaultConfig {
         applicationId "com.vuforia.samples.VuforiaSamples"
-        minSdkVersion 19
-        targetSdkVersion 19
+        minSdkVersion 19        // runtime: minSdkVersion is the lower bound for your app
+        targetSdkVersion 19     // runtime: designed-for appearance, etc
         versionCode 200
         versionName "5.0"
     }

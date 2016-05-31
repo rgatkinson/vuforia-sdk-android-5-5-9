@@ -24,7 +24,7 @@ public final class LoadingDialogHandler extends Handler
     public static final int HIDE_LOADING_DIALOG = 0;
     public static final int SHOW_LOADING_DIALOG = 1;
     
-    public View mLoadingDialogContainer;
+    public View loadingDialogContainer;
     
     
     public LoadingDialogHandler(Activity activity)
@@ -43,11 +43,11 @@ public final class LoadingDialogHandler extends Handler
         
         if (msg.what == SHOW_LOADING_DIALOG)
         {
-            mLoadingDialogContainer.setVisibility(View.VISIBLE);
+            loadingDialogContainer.setVisibility(View.VISIBLE);
             
         } else if (msg.what == HIDE_LOADING_DIALOG)
         {
-            mLoadingDialogContainer.setVisibility(View.GONE);
+            loadingDialogContainer.setVisibility(View.GONE);
         }
     }
     

@@ -253,7 +253,7 @@ public class CylinderTargets extends Activity implements
         mUILayout.setBackgroundColor(Color.BLACK);
         
         // Gets a reference to the loading dialog
-        loadingDialogHandler.mLoadingDialogContainer = mUILayout
+        loadingDialogHandler.loadingDialogContainer = mUILayout
             .findViewById(R.id.loading_indicator);
         
         // Shows the loading indicator at start

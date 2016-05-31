@@ -46,9 +46,7 @@ public class SampleApplicationGLView extends GLSurfaceView
         // is interpreted as any 32-bit surface with alpha by SurfaceFlinger.
 
         Log.i(LOGTAG, "Using OpenGL ES 2.0");
-        Log.i(LOGTAG, "Using " + (translucent ? "translucent" : "opaque")
-                + " GLView, depth buffer size: " + depth + ", stencil size: "
-                + stencil);
+        Log.i(LOGTAG, "Using " + (translucent ? "translucent" : "opaque") + " GLView, depth buffer size: " + depth + ", stencil size: " + stencil);
 
         // If required set translucent format to allow camera image to
         // show through in the background
@@ -62,8 +60,7 @@ public class SampleApplicationGLView extends GLSurfaceView
 
         // We need to choose an EGLConfig that matches the format of
         // our surface exactly. This is going to be done in our
-        // custom config chooser. See ConfigChooser class definition
-        // below.
+        // custom config chooser. See ConfigChooser class definition below.
         setEGLConfigChooser(translucent ? new ConfigChooser(8, 8, 8, 8, depth, stencil) : new ConfigChooser(5, 6, 5, 0, depth, stencil));
         }
 
@@ -78,10 +75,8 @@ public class SampleApplicationGLView extends GLSurfaceView
 
             Log.i(LOGTAG, "Creating OpenGL ES 2.0 context");
             checkEglError("Before eglCreateContext", egl);
-            int[] attrib_list_gl20 = {EGL_CONTEXT_CLIENT_VERSION, 2,
-                    EGL10.EGL_NONE};
-            context = egl.eglCreateContext(display, eglConfig,
-                    EGL10.EGL_NO_CONTEXT, attrib_list_gl20);
+            int[] attrib_list_gl20 = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL10.EGL_NONE};
+            context = egl.eglCreateContext(display, eglConfig, EGL10.EGL_NO_CONTEXT, attrib_list_gl20);
 
             checkEglError("After eglCreateContext", egl);
             return context;
@@ -117,8 +112,7 @@ public class SampleApplicationGLView extends GLSurfaceView
             mStencilSize = stencil;
             }
 
-        private EGLConfig getMatchingConfig(EGL10 egl, EGLDisplay display,
-                                            int[] configAttribs)
+        private EGLConfig getMatchingConfig(EGL10 egl, EGLDisplay display, int[] configAttribs)
             {
             // Get the number of minimally matching EGL configurations
             int[] num_config = new int[1];
@@ -130,8 +124,7 @@ public class SampleApplicationGLView extends GLSurfaceView
 
             // Allocate then read the array of minimally matching EGL configs
             EGLConfig[] configs = new EGLConfig[numConfigs];
-            egl.eglChooseConfig(display, configAttribs, configs, numConfigs,
-                    num_config);
+            egl.eglChooseConfig(display, configAttribs, configs, numConfigs, num_config);
 
             // Now return the "best" one
             return chooseConfig(egl, display, configs);
@@ -169,8 +162,7 @@ public class SampleApplicationGLView extends GLSurfaceView
                 int b = findConfigAttrib(egl, display, config, EGL10.EGL_BLUE_SIZE, 0);
                 int a = findConfigAttrib(egl, display, config, EGL10.EGL_ALPHA_SIZE, 0);
 
-                if (r == mRedSize && g == mGreenSize && b == mBlueSize
-                        && a == mAlphaSize)
+                if (r == mRedSize && g == mGreenSize && b == mBlueSize && a == mAlphaSize)
                     return config;
                 }
 

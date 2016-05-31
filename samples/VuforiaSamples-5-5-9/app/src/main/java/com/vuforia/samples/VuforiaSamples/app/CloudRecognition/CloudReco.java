@@ -301,9 +301,9 @@ public class CloudReco extends Activity implements SampleApplicationControl,
         mUILayout.setBackgroundColor(Color.BLACK);
         
         // By default
-        loadingDialogHandler.mLoadingDialogContainer = mUILayout
+        loadingDialogHandler.loadingDialogContainer = mUILayout
             .findViewById(R.id.loading_indicator);
-        loadingDialogHandler.mLoadingDialogContainer
+        loadingDialogHandler.loadingDialogContainer
             .setVisibility(View.VISIBLE);
         
         addContentView(mUILayout, new LayoutParams(LayoutParams.MATCH_PARENT,

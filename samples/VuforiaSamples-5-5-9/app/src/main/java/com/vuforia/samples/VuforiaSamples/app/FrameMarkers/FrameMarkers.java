@@ -268,7 +268,7 @@ public class FrameMarkers extends Activity implements SampleApplicationControl,
         mUILayout.setBackgroundColor(Color.BLACK);
         
         // Gets a reference to the loading dialog
-        loadingDialogHandler.mLoadingDialogContainer = mUILayout
+        loadingDialogHandler.loadingDialogContainer = mUILayout
             .findViewById(R.id.loading_indicator);
         
         // Shows the loading indicator at start
