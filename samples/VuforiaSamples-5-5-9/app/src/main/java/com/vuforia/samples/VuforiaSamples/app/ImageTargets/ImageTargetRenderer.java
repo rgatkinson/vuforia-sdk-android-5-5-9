@@ -169,7 +169,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
             for (int tIdx = 0; tIdx < state.getNumTrackableResults(); tIdx++)
                 {
                 TrackableResult trackableResult = state.getTrackableResult(tIdx);
-                printUserData(trackableResult);
+                // printUserData(trackableResult);
                 }
 
             renderer.end();
@@ -201,7 +201,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
                 {
                 TrackableResult trackableResult = state.getTrackableResult(tIdx);
                 Trackable trackable = trackableResult.getTrackable();
-                printUserData(trackableResult);
+                // printUserData(trackableResult);
 
                 Matrix44F modelViewMatrix_Vuforia = Tool.convertPose2GLMatrix(trackableResult.getPose());
                 float[] modelViewMatrixData = modelViewMatrix_Vuforia.getData();
@@ -283,7 +283,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
             }
         }
 
-    private void printUserData(TrackableResult trackableResult)
+    public static void printUserData(TrackableResult trackableResult)
         {
         // http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/
         // https://developer.vuforia.com/library/articles/Solution/Get-the-Camera-Position

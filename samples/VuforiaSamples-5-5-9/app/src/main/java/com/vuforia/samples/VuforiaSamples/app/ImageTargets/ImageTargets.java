@@ -34,6 +34,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.CheckBox;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.Toast;
@@ -44,6 +45,7 @@ import com.vuforia.ObjectTracker;
 import com.vuforia.State;
 import com.vuforia.STORAGE_TYPE;
 import com.vuforia.Trackable;
+import com.vuforia.TrackableResult;
 import com.vuforia.Tracker;
 import com.vuforia.TrackerManager;
 import com.vuforia.Vuforia;
@@ -75,7 +77,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
     private int                         mDatasetsNumber = 0;
 
     // Our OpenGL view:
-    private SampleApplicationGLView glView;
+    private SampleApplicationGLView     glView;
 
     // Our renderer:
     private ImageTargetRenderer         imageTargetRenderer;
@@ -113,6 +115,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
         {
         Log.d(LOGTAG, "onCreate");
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.rendered_camera);
 
         vuforiaAppSession = new SampleApplicationSession(this);
 
@@ -286,8 +289,8 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
         glView.init(translucent, depthSize, stencilSize);
 
         imageTargetRenderer = new ImageTargetRenderer(this, vuforiaAppSession);
-
         imageTargetRenderer.setTextures(textures, textureNames);
+
         glView.setRenderer(imageTargetRenderer);
         }
 
@@ -385,11 +388,10 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
 
             imageTargetRenderer.isActive = true;
 
-            // Now add the GL surface view. It is important
-            // that the OpenGL ES surface view gets added
-            // BEFORE the camera is started and video
-            // background is configured.
-            addContentView(glView, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+            // Now add the GL surface view. It is important that the OpenGL ES surface view gets added
+            // BEFORE the camera is started and video background is configured.
+            LinearLayout viewRoot = (LinearLayout) findViewById(R.id.gl_surface_root);
+            viewRoot.addView(glView);
 
             // Sets the UILayout to be drawn in front of the camera
             uiLayout.bringToFront();
@@ -463,7 +465,11 @@ public class ImageTargets extends Activity implements SampleApplicationControl, 
     @Override
     public void onVuforiaUpdate(State state)
         {
-        // TODO: report tracking
+        for (int tIdx = 0; tIdx < state.getNumTrackableResults(); tIdx++)
+            {
+            TrackableResult trackableResult = state.getTrackableResult(tIdx);
+            ImageTargetRenderer.printUserData(trackableResult);
+            }
 
         if (switchDatasetAsap)
             {
